@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+rm ./a.out
+
+echo "Compiling..."
+mpicc mm.cpp
+
+echo "Running..."
+mpirun -n 4 ./a.out

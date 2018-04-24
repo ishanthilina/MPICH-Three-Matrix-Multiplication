@@ -12,14 +12,19 @@
 
 #include <stdio.h>
 #include <mpi.h>
+
 #define NUM_ROWS_A 12 //rows of input [A]
-  # define NUM_COLUMNS_A 12 //columns of input [A]
-  # define NUM_ROWS_B 12 //rows of input [B]
-  # define NUM_COLUMNS_B 12 //columns of input [B]
-  # define MASTER_TO_SLAVE_TAG 1 //tag for messages sent from master to slaves
-  # define SLAVE_TO_MASTER_TAG 4 //tag for messages sent from slaves to master
+#define NUM_COLUMNS_A 12 //columns of input [A]
+#define NUM_ROWS_B 12 //rows of input [B]
+#define NUM_COLUMNS_B 12 //columns of input [B]
+#define MASTER_TO_SLAVE_TAG 1 //tag for messages sent from master to slaves
+#define SLAVE_TO_MASTER_TAG 4 //tag for messages sent from slaves to master
+#define MASTER_RANK 0 //rank of the master node
+
+//functions
 void makeAB(); //makes the [A] and [B] matrixes
 void printArray(); //print the content of output matrix [C];
+
 int rank; //process rank
 int size; //number of processes
 int i, j, k; //helper variables
@@ -33,12 +38,13 @@ int upper_bound; //upper bound of the number of rows of [A] allocated to a slave
 int portion; //portion of the number of rows of [A] allocated to a slave
 MPI_Status status; // store status of a MPI_Recv
 MPI_Request request; //capture request of a MPI_Isend
+
 int main(int argc, char * argv[]) {
   MPI_Init( & argc, & argv); //initialize MPI operations
   MPI_Comm_rank(MPI_COMM_WORLD, & rank); //get the rank
   MPI_Comm_size(MPI_COMM_WORLD, & size); //get number of processes
   /* master initializes work*/
-  if (rank == 0) {
+  if (rank == MASTER_RANK) {
     makeAB();
     start_time = MPI_Wtime();
     for (i = 1; i < size; i++) { //for each slave other than the master
@@ -60,7 +66,7 @@ int main(int argc, char * argv[]) {
   //broadcast [B] to all the slaves
   MPI_Bcast( & mat_b, NUM_ROWS_B * NUM_COLUMNS_B, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   /* work done by slaves*/
-  if (rank > 0) {
+  if (rank > MASTER_RANK) {
     //receive low bound from the master
     MPI_Recv( & low_bound, 1, MPI_INT, 0, MASTER_TO_SLAVE_TAG, MPI_COMM_WORLD, & status);
     //next receive upper bound from the master
@@ -82,7 +88,7 @@ int main(int argc, char * argv[]) {
     MPI_Isend( & mat_result[low_bound][0], (upper_bound - low_bound) * NUM_COLUMNS_B, MPI_DOUBLE, 0, SLAVE_TO_MASTER_TAG + 2, MPI_COMM_WORLD, & request);
   }
   /* master gathers processed work*/
-  if (rank == 0) {
+  if (rank == MASTER_RANK) {
     for (i = 1; i < size; i++) { // untill all slaves have handed back the processed data
       //receive low bound from a slave
       MPI_Recv( & low_bound, 1, MPI_INT, i, SLAVE_TO_MASTER_TAG, MPI_COMM_WORLD, & status);
