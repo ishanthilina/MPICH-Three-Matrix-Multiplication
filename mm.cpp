@@ -1,17 +1,7 @@
-/**********************************************************************************************
- * Matrix Multiplication Program using MPI.
- *
- * Viraj Brian Wijesuriya - University of Colombo School of Computing, Sri Lanka.
- *
- * Works with any type of two matrixes [A], [B] which could be multiplied to produce a matrix [c].
- *
- * Master process initializes the multiplication operands, distributes the muliplication
- * operation to worker processes and reduces the worker results to construct the final output.
- *
- ************************************************************************************************/
-
 #include <stdio.h>
 #include <mpi.h>
+#include <ctime>    // For time()
+#include <cstdlib>  // For srand() and rand()
 
 #define NUM_ROWS_A 12 //rows of input [A]
 #define NUM_COLUMNS_A 12 //columns of input [A]
@@ -20,10 +10,13 @@
 #define MASTER_TO_SLAVE_TAG 1 //tag for messages sent from master to slaves
 #define SLAVE_TO_MASTER_TAG 4 //tag for messages sent from slaves to master
 #define MASTER_RANK 0 //rank of the master node
+#define MATRIX_A_MAX_VAL 100 //max value of an entry in matrix A
+#define MATRIX_B_MAX_VAL 10 //max value of an entry in matrix B
 
 //functions
 void makeAB(); //makes the [A] and [B] matrixes
 void printArray(); //print the content of output matrix [C];
+int generateRandomNumber(int max); //generate random numbers in the range of 0-max
 
 int rank; //process rank
 int size; //number of processes
@@ -105,16 +98,22 @@ int main(int argc, char * argv[]) {
   return 0;
 }
 void makeAB() {
+  srand(time(0));  // Initialize random number generator.
+
   for (i = 0; i < NUM_ROWS_A; i++) {
     for (j = 0; j < NUM_COLUMNS_A; j++) {
-      mat_a[i][j] = i + j;
+      mat_a[i][j] = generateRandomNumber(MATRIX_A_MAX_VAL);
     }
   }
   for (i = 0; i < NUM_ROWS_B; i++) {
     for (j = 0; j < NUM_COLUMNS_B; j++) {
-      mat_b[i][j] = i * j;
+      mat_b[i][j] = generateRandomNumber(MATRIX_B_MAX_VAL);
     }
   }
+}
+
+int generateRandomNumber(int max){
+  return rand() % max + 1;
 }
 void printArray() {
   for (i = 0; i < NUM_ROWS_A; i++) {
