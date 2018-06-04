@@ -1,7 +1,7 @@
 Summary
 =======
 
-This is an (MPICH)[https://www.mpich.org/] based Matrix multiplication code. It code generates three matrices with random numbers and distributes the  multiplication workload among the slave nodes. After each slave finished his work, the final result is printed.
+This is an [MPICH](https://www.mpich.org/) based Matrix multiplication code. It code generates three matrices with random numbers and distributes the  multiplication workload among the slave nodes. After each slave finished his work, the final result is printed.
 
 The code is pretty self explanatory. Loads of comments has been added as well.
 
