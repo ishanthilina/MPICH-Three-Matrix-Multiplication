@@ -9,8 +9,8 @@
 #define NUM_COLUMNS_B 12 //columns of input [B]
 #define NUM_ROWS_C 12 //rows of input [C]
 #define NUM_COLUMNS_C 12 //columns of input [C]
-#define NUM_ROWS_P 12 //P is the resultant matrix of A*B
-#define NUM_COLUMNS_P 12 //P is the resultant matrix of A*B
+#define NUM_ROWS_P  NUM_ROWS_A //P is the resultant matrix of A*B
+#define NUM_COLUMNS_P NUM_COLUMNS_C //P is the resultant matrix of A*B
 #define MASTER_TO_SLAVE_TAG 1 //tag for messages sent from master to slaves
 #define SLAVE_TO_MASTER_TAG 4 //tag for messages sent from slaves to master
 #define MASTER_RANK 0 //rank of the master node
@@ -20,7 +20,7 @@
 
 
 //functions
-void makeABC(); //makes the [A] and [B] matrixes
+void makeABC(); //makes the [A], [B], [C] matrixes
 void printArray(); //print the content of output matrix [Z];
 int generateRandomNumber(int max); //generate random numbers in the range of 0-max
 
@@ -50,6 +50,7 @@ int main(int argc, char * argv[]) {
     makeABC();
     start_time = MPI_Wtime();
     for (i = 1; i < size; i++) { //for each slave other than the master
+      //First we multiply A*B
       portion = (NUM_ROWS_A / (size - 1)); // calculate portion without master
       low_bound = (i - 1) * portion;
       if (((i + 1) == size) && ((NUM_ROWS_A % (size - 1)) != 0)) { //if rows of [A] cannot be equally divided among slaves
@@ -89,7 +90,7 @@ int main(int argc, char * argv[]) {
     //finally send the processed portion of data without blocking, to the master
     MPI_Isend( & mat_res_1[low_bound][0], (upper_bound - low_bound) * NUM_COLUMNS_B, MPI_DOUBLE, 0, SLAVE_TO_MASTER_TAG + 2, MPI_COMM_WORLD, & request);
   }
-  //======
+
   /* master gathers processed work*/
   if (rank == MASTER_RANK) {
     for (i = 1; i < size; i++) { // untill all slaves have handed back the processed data
@@ -101,8 +102,8 @@ int main(int argc, char * argv[]) {
       MPI_Recv( & mat_res_1[low_bound][0], (upper_bound - low_bound) * NUM_COLUMNS_B, MPI_DOUBLE, i, SLAVE_TO_MASTER_TAG + 2, MPI_COMM_WORLD, & status);
     }
   }
-
-    //prepare for second multiplication
+    //prepare for second multiplication. Here we have  A*B. Now we will multiply
+    //(A*B)*C
     if (rank == MASTER_RANK) {
       for (i = 1; i < size; i++) { //for each slave other than the master
         portion = (NUM_ROWS_P / (size - 1)); // calculate portion without master
